@@ -1,11 +1,7 @@
 package main
 
-import (
-	"fmt"
-
-	"cube/scheduler"
-)
+import "fmt"
 
 func main() {
-	fmt.Println(scheduler.Hello("slay bestie"))
+	fmt.Println("Hello, world!")
 }
