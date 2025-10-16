@@ -9,22 +9,22 @@ import (
 )
 
 type Manager struct {
-	pending       queue.Queue
-	tasksDb       map[string]task.Task
-	taskEventDb   map[string]task.TaskEvent
-	workers       []string
-	workerTaskMap map[string]uuid.UUID
-	taskWorkerMap map[uuid.UUID]string
+	Pending       queue.Queue
+	TasksDb       map[string]task.Task
+	TaskEventDb   map[string]task.TaskEvent
+	Workers       []string
+	WorkerTaskMap map[string]uuid.UUID
+	TaskWorkerMap map[uuid.UUID]string
 }
 
-func selectWorker(manager *Manager) {
+func (manager *Manager) SelectWorker() {
 	fmt.Println("I am going to select a worker ts!")
 }
 
-func updateTasks(manager *Manager) {
+func (manager *Manager) UpdateTasks() {
 	fmt.Println("Updating the tasks and data for workers")
 }
 
-func sendWork(manager *Manager) {
+func (manager *Manager) SendWork() {
 	fmt.Println("delegating some work to some task...")
 }

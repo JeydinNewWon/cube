@@ -9,24 +9,24 @@ import (
 )
 
 type Worker struct {
-	db        map[uuid.UUID]*task.Task
-	taskCount uint64
-	queue     queue.Queue
-	name      string
+	Db        map[uuid.UUID]*task.Task
+	TaskCount uint64
+	Queue     queue.Queue
+	Name      string
 }
 
-func runTask(worker *Worker) {
-	fmt.Println("This is the worker %v", worker)
+func (w *Worker) RunTask() {
+	fmt.Println("This is the worker")
 }
 
-func startTask(worker *Worker) {
+func (w *Worker) StartTask() {
 	fmt.Println("This is for starting the task on this worker")
 }
 
-func stopTask(worker *Worker) {
+func (w *Worker) StopTask() {
 	fmt.Println("This is for stopping the task on this worker")
 }
 
-func collectStats(worker *Worker) {
+func (w *Worker) CollectStats() {
 	fmt.Println("Collecting the stats for this worker")
 }
