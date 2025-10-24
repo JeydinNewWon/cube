@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -28,7 +29,7 @@ const (
 
 type Task struct {
 	ID            uuid.UUID
-	ContainerID   uuid.UUID
+	ContainerId   string
 	Name          string
 	State         TaskState
 	Image         string
@@ -54,7 +55,7 @@ type Config struct {
 	AttachStdin   bool
 	AttachStdout  bool
 	AttachStderr  bool
-	ExposedPort   nat.PortSet
+	ExposedPorts  nat.PortSet
 	Cmd           []string
 	Image         string
 	CPU           float64
@@ -65,7 +66,7 @@ type Config struct {
 }
 
 type Docker struct {
-	Client client.Client
+	Client *client.Client
 	Config Config
 }
 
@@ -98,7 +99,7 @@ func (d *Docker) Run() DockerResult {
 	cc := container.Config{
 		Env:          d.Config.Env,
 		Image:        d.Config.Image,
-		ExposedPorts: d.Config.ExposedPort,
+		ExposedPorts: d.Config.ExposedPorts,
 		Tty:          false,
 	}
 
@@ -152,5 +153,33 @@ func (d *Docker) Stop(id string) DockerResult {
 	}
 
 	return DockerResult{Error: nil, Action: "stop", ContainerId: id, Result: "success"}
+}
 
+func NewConfig(task *Task) Config {
+	return Config{
+		Name:          task.Name,
+		Image:         task.Image,
+		RestartPolicy: task.RestartPolicy,
+		CPU:           task.CPU,
+		Memory:        task.Memory,
+		Disk:          task.Disk,
+		ExposedPorts:  task.ExposedPorts,
+	}
+}
+
+func NewDocker(config Config) Docker {
+	newC, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		fmt.Printf("Error creating a new Docker struct: %v\n", err)
+		return Docker{
+			Client: nil,
+			Config: Config{},
+		}
+	}
+
+	return Docker{
+		Client: newC,
+		Config: config,
+	}
 }
