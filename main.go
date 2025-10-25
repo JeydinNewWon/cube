@@ -4,6 +4,9 @@ import (
 	"cube/task"
 	"cube/worker"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang-collections/collections/queue"
@@ -11,42 +14,58 @@ import (
 )
 
 func main() {
-	db := make(map[uuid.UUID]*task.Task)
+	host := os.Getenv("CUBE_PORT")
+	port, _ := strconv.Atoi(os.Getenv("CUBE_PORT"))
+
+	fmt.Println("Starting cube worker")
+
 	w := worker.Worker{
-		Db:    db,
 		Queue: *queue.New(),
+		Db:    make(map[uuid.UUID]*task.Task),
 	}
 
-	t := task.Task{
-		ID:    uuid.New(),
-		Name:  "test-container-1",
-		State: task.Scheduled,
-		Image: "strm/helloworld-http",
-	}
+	api := worker.Api{Address: host, Port: port, Worker: &w}
 
-	fmt.Println("Starting new task")
+	go runTasks(&w)
 
-	w.AddTask(t)
+	api.Start()
 
-	result := w.RunTask()
-	if result.Error != nil {
-		panic(result.Error)
-	}
+	// db := make(map[uuid.UUID]*task.Task)
+	// w := worker.Worker{
+	// 	Db:    db,
+	// 	Queue: *queue.New(),
+	// }
 
-	t.ContainerId = result.ContainerId
-	fmt.Printf("task %s is running in container %s\n", t.ID, t.ContainerId)
+	// t := task.Task{
+	// 	ID:    uuid.New(),
+	// 	Name:  "test-container-1",
+	// 	State: task.Scheduled,
+	// 	Image: "strm/helloworld-http",
+	// }
 
-	fmt.Println("Sleepy time")
-	time.Sleep(time.Second * 30)
+	// fmt.Println("Starting new task")
 
-	fmt.Println("Stopping task")
-	t.State = task.Completed
-	w.AddTask(t)
+	// w.AddTask(t)
 
-	result = w.RunTask()
-	if result.Error != nil {
-		panic(result.Error)
-	}
+	// result := w.RunTask()
+	// if result.Error != nil {
+	// 	panic(result.Error)
+	// }
+
+	// t.ContainerId = result.ContainerId
+	// fmt.Printf("task %s is running in container %s\n", t.ID, t.ContainerId)
+
+	// fmt.Println("Sleepy time")
+	// time.Sleep(time.Second * 30)
+
+	// fmt.Println("Stopping task")
+	// t.State = task.Completed
+	// w.AddTask(t)
+
+	// result = w.RunTask()
+	// if result.Error != nil {
+	// 	panic(result.Error)
+	// }
 
 }
 
@@ -91,3 +110,18 @@ func main() {
 // 		"Container %s has been stopped and removed\n", result.ContainerId)
 // 	return &result
 // }
+
+func runTasks(w *worker.Worker) {
+	for {
+		if w.Queue.Len() != 0 {
+			result := w.RunTask()
+			if result.Error != nil {
+				log.Printf("Error running task: %v\n", result.Error)
+			}
+		} else {
+			log.Printf("No tasks to process currently.\n")
+		}
+		log.Println("Sleeping for 10 seconds.")
+		time.Sleep(10 * time.Second)
+	}
+}

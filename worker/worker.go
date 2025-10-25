@@ -93,6 +93,16 @@ func (w *Worker) StopTask(t task.Task) task.DockerResult {
 	return res
 }
 
+func (w *Worker) GetTasks() []task.Task {
+	res := []task.Task{}
+
+	for _, t := range w.Db {
+		res = append(res, *t)
+	}
+
+	return res
+}
+
 func (w *Worker) CollectStats() {
 	fmt.Println("Collecting the stats for this worker")
 }
