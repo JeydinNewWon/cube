@@ -26,7 +26,7 @@ func (a *Api) StartTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		msg := fmt.Sprintf("Error decoding body: %v\n", err)
-		log.Printf(msg)
+		log.Printf("%s", msg)
 		w.WriteHeader(400)
 		e := ErrResponse{
 			HTTPStatusCode: 400,
