@@ -40,13 +40,13 @@ func (w *Worker) RunTask() task.DockerResult {
 		switch taskPersisted.State {
 		case task.Scheduled:
 			result = w.StartTask(*taskPersisted)
-		case task.Completed:
+		case task.Running:
 			result = w.StopTask(*taskPersisted)
 		default:
 			result.Error = errors.New("we should not be here tf")
 		}
 	} else {
-		err := fmt.Errorf("Invalid transitioning task state from %v to %v", taskPersisted.State, taskQueued.State)
+		err := fmt.Errorf("invalid transitioning task state from %v to %v", taskPersisted.State, taskQueued.State)
 		result.Error = err
 	}
 
@@ -89,6 +89,16 @@ func (w *Worker) StopTask(t task.Task) task.DockerResult {
 	t.State = task.Completed
 	w.Db[t.ID] = &t
 	log.Printf("Stopped and removed container with id %v and Task with id %v\n", t.ContainerId, t.ID)
+
+	return res
+}
+
+func (w *Worker) GetTasks() []task.Task {
+	res := []task.Task{}
+
+	for _, t := range w.Db {
+		res = append(res, *t)
+	}
 
 	return res
 }
