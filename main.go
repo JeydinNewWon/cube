@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	host := os.Getenv("CUBE_PORT")
+	host := os.Getenv("CUBE_HOST")
 	port, _ := strconv.Atoi(os.Getenv("CUBE_PORT"))
 
 	fmt.Println("Starting cube worker")
