@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cube/manager"
 	"cube/task"
 	"cube/worker"
 	"fmt"
@@ -27,7 +28,29 @@ func main() {
 
 	go runTasks(&w)
 	go w.CollectStats()
-	api.Start()
+	go api.Start()
+
+	workers := []string{fmt.Sprintf("%s:%d", host, port)}
+	m := manager.New(workers)
+
+	for i := 0; i < 3; i++ {
+		t := task.Task{
+			ID:    uuid.New(),
+			Name:  fmt.Sprintf("test-container-%d", i),
+			State: task.Scheduled,
+			Image: "nginx:alpine",
+		}
+
+		te := task.TaskEvent{
+			ID:    uuid.New(),
+			State: task.Running,
+			Task:  t,
+		}
+
+		m.AddTask(te)
+		m.SendWork()
+
+	}
 	// db := make(map[uuid.UUID]*task.Task)
 	// w := worker.Worker{
 	// 	Db:    db,
