@@ -24,7 +24,7 @@ type Manager struct {
 
 func (m *Manager) SelectWorker() string {
 	var newWorker int
-	if m.LastWorker < len(m.Workers) {
+	if m.LastWorker+1 < len(m.Workers) {
 		newWorker = m.LastWorker + 1
 		m.LastWorker++
 	} else {
@@ -120,7 +120,6 @@ func (m *Manager) SendWork() {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error sending request %v\n", err)
-		return
 	}
 
 	d := json.NewDecoder(resp.Body)

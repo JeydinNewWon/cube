@@ -26,9 +26,12 @@ func main() {
 	}
 	api := worker.Api{Address: host, Port: port, Worker: &w}
 
+	go api.Start()
+
+	time.Sleep(2 * time.Second)
+
 	go runTasks(&w)
 	go w.CollectStats()
-	go api.Start()
 
 	workers := []string{fmt.Sprintf("%s:%d", host, port)}
 	m := manager.New(workers)
@@ -50,6 +53,21 @@ func main() {
 		m.AddTask(te)
 		m.SendWork()
 
+	}
+
+	go func() {
+		for {
+			fmt.Printf("[Manager] Updating tasks from %d workers\n", len(m.Workers))
+			m.UpdateTasks()
+			time.Sleep(15 * time.Second)
+		}
+	}()
+
+	for {
+		for _, t := range m.TasksDb {
+			fmt.Printf("[Manager] Task id: %s, state: %d\n", t.ID, t.State)
+			time.Sleep(15 * time.Second)
+		}
 	}
 	// db := make(map[uuid.UUID]*task.Task)
 	// w := worker.Worker{
