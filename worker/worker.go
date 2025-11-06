@@ -16,6 +16,7 @@ type Worker struct {
 	TaskCount uint64
 	Queue     queue.Queue
 	Name      string
+	Stats     *Stats
 }
 
 func (w *Worker) RunTask() task.DockerResult {
@@ -103,10 +104,15 @@ func (w *Worker) GetTasks() []task.Task {
 	return res
 }
 
-func (w *Worker) CollectStats() {
-	fmt.Println("Collecting the stats for this worker")
-}
-
 func (w *Worker) AddTask(t task.Task) {
 	w.Queue.Enqueue(t)
+}
+
+func (w *Worker) CollectStats() {
+	for {
+		log.Println("Collecting stats")
+		w.Stats = GetStats()
+		w.Stats.TaskCount = w.TaskCount
+		time.Sleep(15 * time.Second)
+	}
 }
