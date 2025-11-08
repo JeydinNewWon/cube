@@ -19,7 +19,7 @@ type Worker struct {
 	Stats     *Stats
 }
 
-func (w *Worker) RunTask() task.DockerResult {
+func (w *Worker) runTask() task.DockerResult {
 	t := w.Queue.Dequeue()
 
 	if t == nil {
@@ -94,11 +94,11 @@ func (w *Worker) StopTask(t task.Task) task.DockerResult {
 	return res
 }
 
-func (w *Worker) GetTasks() []task.Task {
-	res := []task.Task{}
+func (w *Worker) GetTasks() []*task.Task {
+	res := []*task.Task{}
 
 	for _, t := range w.Db {
-		res = append(res, *t)
+		res = append(res, t)
 	}
 
 	return res
@@ -114,5 +114,20 @@ func (w *Worker) CollectStats() {
 		w.Stats = GetStats()
 		w.Stats.TaskCount = w.TaskCount
 		time.Sleep(15 * time.Second)
+	}
+}
+
+func (w *Worker) RunTasks() {
+	for {
+		if w.Queue.Len() != 0 {
+			result := w.runTask()
+			if result.Error != nil {
+				log.Printf("Error running task: %v\n", result.Error)
+			}
+		} else {
+			log.Printf("No tasks to process currently.\n")
+		}
+		log.Println("Sleeping for 10 seconds.")
+		time.Sleep(10 * time.Second)
 	}
 }

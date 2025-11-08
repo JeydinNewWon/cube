@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ func (m *Manager) SelectWorker() string {
 	return m.Workers[newWorker]
 }
 
-func (m *Manager) UpdateTasks() {
+func (m *Manager) updateTasks() {
 
 	for _, w := range m.Workers {
 		log.Printf("Checking worker %v for task updates\n", w)
@@ -45,7 +46,7 @@ func (m *Manager) UpdateTasks() {
 
 		if err != nil {
 			log.Printf("Error getting tasks info %v\n", err)
-			return
+			continue
 		}
 
 		d := json.NewDecoder(res.Body)
@@ -54,7 +55,7 @@ func (m *Manager) UpdateTasks() {
 
 		if err != nil {
 			log.Printf("error in unmarshalling tasks %v", err)
-			return
+			continue
 		}
 
 		for _, t := range tasks {
@@ -64,7 +65,7 @@ func (m *Manager) UpdateTasks() {
 
 			if !ok {
 				log.Printf("Task with ID %v was not found!", t.ID)
-				return
+				continue
 			}
 
 			if m.TasksDb[t.ID].State != t.State {
@@ -136,6 +137,16 @@ func (m *Manager) AddTask(te task.TaskEvent) {
 	m.Pending.Enqueue(te)
 }
 
+func (m *Manager) GetTasks() []*task.Task {
+	log.Println("gETTING TASKS!!")
+	tasks := []*task.Task{}
+	for _, t := range m.TasksDb {
+		tasks = append(tasks, t)
+	}
+
+	return tasks
+}
+
 func New(workers []string) *Manager {
 	tasksDb := make(map[uuid.UUID]*task.Task)
 	taskEventDb := make(map[uuid.UUID]*task.TaskEvent)
@@ -155,4 +166,23 @@ func New(workers []string) *Manager {
 	}
 
 	return &manager
+}
+
+func (m *Manager) UpdateTasks() {
+	for {
+		log.Println("Checking for any task updates from the workers")
+		m.updateTasks()
+		log.Println("Task updates completed")
+		log.Println("Sleeping for 15 seconds")
+		time.Sleep(15 * time.Second)
+	}
+}
+
+func (m *Manager) ProcessTasks() {
+	for {
+		log.Println("Processing any tasks in the queue")
+		m.SendWork()
+		log.Println("Sleeping for 10 seconds")
+		time.Sleep(10 * time.Second)
+	}
 }
