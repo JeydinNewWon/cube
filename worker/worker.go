@@ -38,11 +38,11 @@ func (w *Worker) runTask() task.DockerResult {
 	var result task.DockerResult
 
 	if task.ValidStateTransition(taskPersisted.State, taskQueued.State) {
-		switch taskPersisted.State {
+		switch taskQueued.State {
 		case task.Scheduled:
-			result = w.StartTask(*taskPersisted)
-		case task.Running:
-			result = w.StopTask(*taskPersisted)
+			result = w.StartTask(taskQueued)
+		case task.Completed:
+			result = w.StopTask(taskQueued)
 		default:
 			result.Error = errors.New("we should not be here tf")
 		}
@@ -52,6 +52,30 @@ func (w *Worker) runTask() task.DockerResult {
 	}
 
 	return result
+}
+
+func (w *Worker) updateTasks() {
+	for id, t := range w.Db {
+		if t.State == task.Running {
+			res := w.InspectTask(*t)
+			if res.Error != nil {
+				log.Printf("Error with updating task through inspection %v\n", res.Error)
+			}
+
+			if res.Container == nil {
+				log.Printf("No container found for running task %v\n", id)
+				w.Db[id].State = task.Failed
+			}
+
+			if res.Container.State.Status == "exited" {
+				log.Printf("Container for task %s is not in running state %s\n", id, res.Container.State.Status)
+				w.Db[id].State = task.Failed
+			}
+
+			w.Db[id].HostPorts = res.Container.NetworkSettings.NetworkSettingsBase.Ports
+
+		}
+	}
 }
 
 func (w *Worker) StartTask(t task.Task) task.DockerResult {
@@ -71,6 +95,8 @@ func (w *Worker) StartTask(t task.Task) task.DockerResult {
 	t.State = task.Running
 	t.ContainerId = res.ContainerId
 	w.Db[t.ID] = &t
+
+	log.Printf("[Worker] started task %v\n", t.ID)
 
 	return res
 }
@@ -130,4 +156,20 @@ func (w *Worker) RunTasks() {
 		log.Println("Sleeping for 10 seconds.")
 		time.Sleep(10 * time.Second)
 	}
+}
+
+func (w *Worker) UpdateTasks() {
+	for {
+		log.Println("Checking status of tasks")
+		w.updateTasks()
+		log.Println("Task updates completed")
+		log.Println("Sleeping for 15 seconds")
+		time.Sleep(15 * time.Second)
+	}
+}
+
+func (w *Worker) InspectTask(t task.Task) task.DockerInspectResponse {
+	config := task.NewConfig(&t)
+	d := task.NewDocker(config)
+	return d.Inspect(t.ContainerId)
 }
