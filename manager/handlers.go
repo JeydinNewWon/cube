@@ -42,7 +42,6 @@ func (a *Api) StartTaskHandler(w http.ResponseWriter, r *http.Request) {
 func (a *Api) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	log.Printf("HERE! %v\n", a.Manager.GetTasks())
 	json.NewEncoder(w).Encode(a.Manager.GetTasks())
 }
 

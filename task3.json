@@ -1,10 +1,10 @@
 {
-    "ID": "6be4cb6b-61d1-40cb-bc7b-9cacefefa60c",
+    "ID": "3b1c5556-ef0f-4d24-bbda-426029d47dcf",
     "State": 2,
     "Task": {
         "State": 1,
-        "ID": "21b23589-5d2d-4731-b5c9-a97e9832d021",
-        "Name": "test-chapter-9.2",
+        "ID": "95fbe134-7f19-496a-acfc-c7853e5b4cd2",
+        "Name": "test-chapter-9.3", 
         "Image": "timboring/echo-server:latest",
         "ExposedPorts": {
             "7777/tcp": {}
@@ -12,6 +12,6 @@
         "PortBindings": {
             "7777/tcp": "7777"
         },
-        "HealthCheck": "/healthfail"
+        "HealthCheck": "/health"
     }
 }

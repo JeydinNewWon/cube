@@ -23,24 +23,53 @@ func main() {
 
 	fmt.Println("Starting Cube worker")
 
-	w := worker.Worker{
+	w1 := worker.Worker{
 		Queue: *queue.New(),
 		Db:    make(map[uuid.UUID]*task.Task),
 	}
-	wapi := worker.Api{Address: whost, Port: wport, Worker: &w}
+	wapi := worker.Api{Address: whost, Port: wport, Worker: &w1}
+
+	w2 := worker.Worker{
+		Queue: *queue.New(),
+		Db:    make(map[uuid.UUID]*task.Task),
+	}
+
+	w2api := worker.Api{Address: whost, Port: wport + 1, Worker: &w2}
+
+	w3 := worker.Worker{
+		Queue: *queue.New(),
+		Db:    make(map[uuid.UUID]*task.Task),
+	}
+
+	w3api := worker.Api{Address: whost, Port: wport + 2, Worker: &w3}
 
 	go wapi.Start()
+	go w2api.Start()
+	go w3api.Start()
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(4 * time.Second)
 
-	go w.RunTasks()
-	go w.CollectStats()
-	go w.UpdateTasks()
+	go w1.RunTasks()
+	go w1.CollectStats()
+	go w1.UpdateTasks()
+
+	go w2.RunTasks()
+	go w2.CollectStats()
+	go w2.UpdateTasks()
+
+	go w3.RunTasks()
+	go w3.CollectStats()
+	go w3.UpdateTasks()
 
 	log.Println("Starting Cube Manager")
 
-	workers := []string{fmt.Sprintf("%s:%d", whost, wport)}
-	m := manager.New(workers)
+	workers := []string{
+		fmt.Sprintf("%s:%d", whost, wport),
+		fmt.Sprintf("%s:%d", whost, wport+1),
+		fmt.Sprintf("%s:%d", whost, wport+2),
+	}
+
+	m := manager.New(workers, "roundrobin")
 	mapi := manager.Api{
 		Address: mhost,
 		Port:    mport,

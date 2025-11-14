@@ -5,6 +5,6 @@
         "State": 1,
         "ID": "21b23589-5d2d-4731-b5c9-a97e9832d021",
         "Name": "test-chapter-5",
-        "Image": "nginx:alpine"
+        "Image": "strm/helloworld-http"
     }
 }
